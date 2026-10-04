@@ -38,6 +38,8 @@ import {
   STRATEGIC_DISTRICT_HUBS,
   SAFE_SHELTERS,
 } from "@/lib/constants/indiaGeographicData";
+import { GoogleMap2DView } from "./GoogleMap2DView";
+import { isGoogleMapsConfigured } from "@/lib/services/googleMapsLoader";
 
 export interface AdvancedMapProps {
   className?: string;
@@ -65,6 +67,13 @@ export const AdvancedMap: React.FC<AdvancedMapProps> = ({
   const [activeIncident, setActiveIncident] = useState<IntelligenceEvent | null>(null);
   const [mapStyle, setMapStyle] = useState<"TACTICAL" | "NATURAL">("TACTICAL");
   const [currentZoom, setCurrentZoom] = useState<number>(5.0);
+  const [useGoogleMaps, setUseGoogleMaps] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (!isGoogleMapsConfigured()) {
+      setUseGoogleMaps(false);
+    }
+  }, []);
 
   // Default Layer Toggles
   const [layerVisibility, setLayerVisibility] = useState({
@@ -778,6 +787,30 @@ export const AdvancedMap: React.FC<AdvancedMapProps> = ({
 
   const currentTier = getZoomTierInfo(currentZoom);
 
+  if (useGoogleMaps) {
+    return (
+      <div className={`relative w-full h-full min-h-[440px] bg-[#05070e] overflow-hidden select-none ${className}`}>
+        <GoogleMap2DView
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={onToggleFullscreen}
+          selectedIncidentId={selectedIncidentId}
+          onSelectIncident={onSelectIncident}
+          incidents={activeIncidents}
+          onFallbackToLeaflet={() => setUseGoogleMaps(false)}
+        />
+        <div className="absolute bottom-3.5 left-3.5 z-20">
+          <button
+            onClick={() => setUseGoogleMaps(false)}
+            className="px-2.5 py-1 bg-isie-panel/90 hover:bg-isie-panel border border-white/10 hover:border-white/20 text-[10px] text-isie-text-muted hover:text-white rounded-xs font-mono backdrop-blur-md shadow-md transition-colors"
+            title="Switch to Offline Tactical Vector Map"
+          >
+            SWITCH TO VECTOR MAP
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`relative w-full h-full min-h-[360px] bg-[#05070e] overflow-hidden select-none border border-white/10 ${className}`}
@@ -796,6 +829,14 @@ export const AdvancedMap: React.FC<AdvancedMapProps> = ({
           <TacticalBadge variant="orange" size="sm">
             2D INDIA TACTICAL
           </TacticalBadge>
+
+          <button
+            onClick={() => setUseGoogleMaps(true)}
+            className="px-2 py-0.5 bg-isie-cyan/20 hover:bg-isie-cyan/30 border border-isie-cyan/60 text-isie-cyan hover:text-white rounded-xs font-mono text-[10px] font-bold uppercase transition-colors"
+            title="Switch to Google Maps 2D Operational View"
+          >
+            SWITCH TO GOOGLE MAPS
+          </button>
 
           {/* Progressive Zoom Level Telemetry Badge */}
           <div className="flex items-center gap-1.5 bg-[#05070e]/95 border border-cyan-500/40 px-2 py-0.5 rounded-xs backdrop-blur-md shadow-lg font-mono text-[10px]">

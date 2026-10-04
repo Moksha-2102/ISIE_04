@@ -60,7 +60,7 @@ export const LeftIntelPanel: React.FC<LeftIntelPanelProps> = ({
       className={`flex flex-col h-full min-h-0 min-w-0 bg-isie-panel select-none ${className}`}
     >
       {/* Panel Header with Breathing Room */}
-      <div className="px-4 py-3.5 border-b border-white/10 bg-isie-panel-light/30 flex items-center justify-between shrink-0">
+      <div className="px-5 py-4 border-b border-white/10 bg-isie-panel-light/30 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
           <Flame className="w-4 h-4 text-isie-primary shrink-0" />
           <div className="flex flex-col min-w-0">
@@ -78,7 +78,7 @@ export const LeftIntelPanel: React.FC<LeftIntelPanelProps> = ({
       </div>
 
       {/* Severity Filter Tabs */}
-      <div className="px-3 py-2 border-b border-white/10 bg-isie-bg-surface/40 flex items-center justify-between text-[11px] font-mono shrink-0 gap-1.5 overflow-x-auto">
+      <div className="px-4 py-2.5 border-b border-white/10 bg-isie-bg-surface/40 flex items-center justify-between text-[11px] font-mono shrink-0 gap-2 overflow-x-auto">
         <div className="flex items-center gap-1.5 shrink-0">
           {["ALL", "CRITICAL", "HIGH", "MEDIUM"].map((lvl) => (
             <button
@@ -104,7 +104,7 @@ export const LeftIntelPanel: React.FC<LeftIntelPanelProps> = ({
       </div>
 
       {/* Main Content Area: Incident Cards with Generous Spacing */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-3.5 space-y-3.5 scrollbar-thin">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-4 scrollbar-thin">
         {filtered.length === 0 ? (
           <EmptyState
             compact
@@ -130,14 +130,14 @@ export const LeftIntelPanel: React.FC<LeftIntelPanelProps> = ({
                 setSelectedEventId(item.id);
                 onSelectIncident?.(item);
               }}
-              className={`p-3.5 sm:p-4 rounded-sm border cursor-pointer transition-all duration-200 relative group overflow-hidden ${
+              className={`p-4 sm:p-5 rounded-sm border cursor-pointer transition-all duration-200 relative group overflow-hidden ${
                 isSelected
                   ? "bg-gradient-to-r from-isie-primary/10 via-isie-panel-elevated to-isie-panel border-l-4 border-l-isie-primary border-white/20 shadow-lg"
                   : isCritical
-                  ? "bg-white/[0.025] hover:bg-white/[0.045] border-l-4 border-l-red-500/80 border-white/10 hover:border-white/20"
+                  ? "bg-white/[0.025] hover:bg-white/[0.045] border-l-4 border-l-red-500/80 border-white/10 hover:border-white/20 shadow-sm"
                   : isHigh
-                  ? "bg-white/[0.025] hover:bg-white/[0.045] border-l-4 border-l-amber-500/80 border-white/10 hover:border-white/20"
-                  : "bg-white/[0.025] hover:bg-white/[0.045] border-l-4 border-l-isie-cyan/70 border-white/10 hover:border-white/20"
+                  ? "bg-white/[0.025] hover:bg-white/[0.045] border-l-4 border-l-amber-500/80 border-white/10 hover:border-white/20 shadow-sm"
+                  : "bg-white/[0.025] hover:bg-white/[0.045] border-l-4 border-l-isie-cyan/70 border-white/10 hover:border-white/20 shadow-sm"
               }`}
             >
               {/* Top Row: Event Code, Badge, Timestamp */}

@@ -4,6 +4,8 @@ import React, { Component, ErrorInfo, ReactNode, useState, useEffect } from "rea
 import dynamic from "next/dynamic";
 import { RotateCcw, AlertTriangle, Globe } from "lucide-react";
 import { IntelligenceEvent } from "@/lib/types/isie";
+import { isGoogleMapsConfigured } from "@/lib/services/googleMapsLoader";
+import { GoogleMaps3DView } from "./GoogleMaps3DView";
 
 export interface Global3DViewProps {
   className?: string;
@@ -35,7 +37,7 @@ export class ThreeErrorBoundary extends Component<ErrorBoundaryProps, ErrorBound
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.warn("Global3DView encountered an error:", error, errorInfo);
+    console.warn("3D View encountered an error:", error, errorInfo);
   }
 
   reset = () => {
@@ -75,8 +77,8 @@ export class ThreeErrorBoundary extends Component<ErrorBoundaryProps, ErrorBound
   }
 }
 
-// Resilient dynamic loader with automatic chunk retry on failure
-const DynamicGlobal3DView = dynamic(
+// Resilient dynamic loader for Three.js Satellite Earth fallback
+const DynamicThreeGlobeView = dynamic(
   () =>
     import("@/components/visuals/Global3DView")
       .then((mod) => mod.Global3DView)
@@ -87,7 +89,6 @@ const DynamicGlobal3DView = dynamic(
           .then((mod) => mod.Global3DView)
           .catch((retryErr) => {
             console.error("Failed to load 3D spatial chunk after retry:", retryErr);
-            // Return fallback component instead of crashing with unhandled ChunkLoadError
             const Fallback: React.FC<Global3DViewProps> = () => (
               <div className="w-full h-full min-h-[360px] bg-isie-bg-deep flex flex-col items-center justify-center p-6 text-center font-mono text-xs select-none">
                 <div className="max-w-md p-5 bg-isie-panel border border-amber-500/40 rounded-sm shadow-2xl space-y-3">
@@ -126,10 +127,25 @@ const DynamicGlobal3DView = dynamic(
 
 export const SafeGlobal3DView: React.FC<Global3DViewProps> = (props) => {
   const [remountKey, setRemountKey] = useState(0);
+  const [useGoogleMaps3D, setUseGoogleMaps3D] = useState<boolean>(true);
+
+  // If Google Maps key is not present, default to Three.js Satellite Earth
+  useEffect(() => {
+    if (!isGoogleMapsConfigured()) {
+      setUseGoogleMaps3D(false);
+    }
+  }, []);
 
   return (
     <ThreeErrorBoundary key={remountKey} onReset={() => setRemountKey((k) => k + 1)}>
-      <DynamicGlobal3DView {...props} />
+      {useGoogleMaps3D ? (
+        <GoogleMaps3DView
+          {...props}
+          onFallbackToThreeGlobe={() => setUseGoogleMaps3D(false)}
+        />
+      ) : (
+        <DynamicThreeGlobeView {...props} />
+      )}
     </ThreeErrorBoundary>
   );
 };
