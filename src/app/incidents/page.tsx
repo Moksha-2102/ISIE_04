@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   History,
   Globe2,
+  FileDown,
 } from "lucide-react";
 import { TacticalBadge } from "@/components/ui/TacticalBadge";
 import { TacticalButton } from "@/components/ui/TacticalButton";
@@ -30,6 +31,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { hasPermission } from "@/lib/auth/roles";
 import { IntelligenceEvent, EventStatus } from "@/lib/types/isie";
 import { CreateIncidentModal } from "@/components/incidents/CreateIncidentModal";
+import { exportIncidentReportPdf } from "@/lib/utils/exportIncidentPdf";
 import Link from "next/link";
 
 export default function IncidentsPage() {
@@ -44,6 +46,10 @@ export default function IncidentsPage() {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [statusNote, setStatusNote] = useState("");
   const [statusSuccess, setStatusSuccess] = useState<string | null>(null);
+
+  // PDF Export state
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfSuccess, setPdfSuccess] = useState<string | null>(null);
 
   // Subscribe to real-time incidents
   useEffect(() => {
@@ -97,6 +103,28 @@ export default function IncidentsPage() {
       setTimeout(() => setStatusSuccess(null), 3000);
     }
     setUpdatingStatus(false);
+  };
+
+  const handleExportPdf = () => {
+    if (!selectedIncident) return;
+    setIsGeneratingPdf(true);
+    setPdfSuccess(null);
+    try {
+      const ok = exportIncidentReportPdf(selectedIncident, {
+        officerName: user?.name,
+        officerRole: user?.role,
+        organization: user?.organization,
+        callsign: user?.callsign,
+      });
+      if (ok) {
+        setPdfSuccess(`PDF Downloaded: ${selectedIncident.eventCode}.pdf`);
+        setTimeout(() => setPdfSuccess(null), 3500);
+      }
+    } catch (err) {
+      console.error("PDF export failed:", err);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   return (
@@ -281,12 +309,33 @@ export default function IncidentsPage() {
                     </span>
                   </div>
 
-                  <h2 className="font-mono text-xl font-bold text-white uppercase tracking-wider">
-                    {selectedIncident.title}
-                  </h2>
-                  <p className="text-xs text-isie-text-secondary mt-1">
-                    {selectedIncident.locationName} // {selectedIncident.region || `${selectedIncident.district || "Sector"}, ${selectedIncident.state || "India"}`}
-                  </p>
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mt-1">
+                    <div className="min-w-0">
+                      <h2 className="font-mono text-xl font-bold text-white uppercase tracking-wider">
+                        {selectedIncident.title}
+                      </h2>
+                      <p className="text-xs text-isie-text-secondary mt-1">
+                        {selectedIncident.locationName} // {selectedIncident.region || `${selectedIncident.district || "Sector"}, ${selectedIncident.state || "India"}`}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={handleExportPdf}
+                      disabled={isGeneratingPdf}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 hover:border-amber-500/80 text-amber-300 rounded-xs font-mono text-xs font-bold tracking-wider transition-all shadow-[0_0_12px_rgba(245,158,11,0.15)] cursor-pointer shrink-0 self-start sm:self-auto"
+                      title="Generate & Export Operational Incident PDF Summary Report"
+                    >
+                      <FileDown className="w-3.5 h-3.5 text-amber-400" />
+                      <span>{isGeneratingPdf ? "GENERATING PDF..." : "EXPORT PDF REPORT"}</span>
+                    </button>
+                  </div>
+
+                  {pdfSuccess && (
+                    <div className="mt-2.5 p-2 bg-emerald-950/40 border border-emerald-500/40 rounded-xs font-mono text-xs text-emerald-300 flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>{pdfSuccess}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Summary */}
@@ -451,6 +500,17 @@ export default function IncidentsPage() {
               </div>
 
               <div className="flex items-center gap-2">
+                {selectedIncident && (
+                  <button
+                    onClick={handleExportPdf}
+                    disabled={isGeneratingPdf}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xs font-mono text-xs bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 hover:border-amber-500/70 text-amber-300 font-bold uppercase transition-colors"
+                    title="Generate & Export Operational Incident PDF Summary Report"
+                  >
+                    <FileDown className="w-3.5 h-3.5 text-amber-400" />
+                    <span>{isGeneratingPdf ? "EXPORTING..." : "EXPORT PDF"}</span>
+                  </button>
+                )}
                 <Link href="/decision-support">
                   <TacticalButton variant="primary" size="sm">
                     MOBILIZE RELOCATION ASSETS
